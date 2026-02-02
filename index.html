@@ -7,43 +7,38 @@
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Custom styles for professional appearance and PDF targeting */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
 
+        /* Styles specifically for the PDF content container */
         .invoice-document {
             background-color: white;
             padding: 2rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
+        /* Hide buttons and interactive elements when printing/generating PDF */
         @media print {
             .no-print {
                 display: none !important;
             }
         }
 
+        /* Ensure table border collapse for a cleaner look */
         .invoice-table th, .invoice-table td {
             border: 1px solid #e5e7eb;
         }
-        
+        /* Custom styling for the multiple advance paid entries */
         .advance-entry {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 0.5rem;
             margin-bottom: 0.25rem;
-        }
-
-        /* Helper to hide inputs but show their values during PDF generation */
-        .pdf-text-only {
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
-            appearance: none;
-            -webkit-appearance: none;
         }
     </style>
     <!-- Load html2pdf.js for PDF generation -->
@@ -104,7 +99,11 @@
             <div class="flex justify-between mb-8">
                 <div class="w-1/2 pr-4">
                     <p class="font-semibold text-gray-700 mb-1">Bill To:</p>
-                    <textarea id="bill-to-input" class="w-full h-24 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Customer Name, Address, Contact details...">Mr. John Doe&#10;123 Main Street&#10;Anytown, 587125</textarea>
+                    <div id="bill-to-container">
+                        <textarea id="bill-to-input" class="w-full h-20 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Customer Name, Address, Contact details...">Mr. John Doe
+123 Main Street
+Anytown, 587125</textarea>
+                    </div>
                 </div>
                 <div class="w-1/2 pl-4 text-right">
                     <p class="font-semibold text-gray-700 mb-1">Status:</p>
@@ -130,6 +129,7 @@
                         </tr>
                     </thead>
                     <tbody id="item-table-body" class="text-gray-700 text-sm font-light">
+                        <!-- Default item row -->
                         <tr class="hover:bg-gray-50 border-b border-gray-200">
                             <td class="py-2 px-3">
                                 <input type="date" value="2025-11-20" class="date-input w-full p-1 border-none focus:ring-0">
@@ -147,9 +147,7 @@
                                 <input type="number" value="10000.00" min="0" class="amount-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                             </td>
                             <td class="py-2 px-3 text-center no-print">
-                                <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
-                                </button>
+                                <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg></button>
                             </td>
                         </tr>
                     </tbody>
@@ -163,7 +161,7 @@
                         <span class="text-gray-700 font-medium">Subtotal:</span>
                         <span id="subtotal-display" class="font-bold text-gray-800">₹0.00</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex justify-between items-center">
                         <label for="discount-input" class="text-gray-700 font-medium">Discount (₹):</label>
                         <input type="number" id="discount-input" value="0" min="0" class="w-24 text-right border border-gray-300 rounded-md p-1 focus:outline-none focus:ring-1 focus:ring-indigo-500" oninput="calculateTotals()">
                     </div>
@@ -179,14 +177,7 @@
                         </div>
                         
                         <div id="advance-paid-list" class="space-y-1">
-                            <div class="advance-entry">
-                                <input type="date" value="2025-11-23" class="advance-date-input text-xs w-2/5 p-1 border border-gray-300 rounded-md focus:ring-indigo-500">
-                                <span class="text-xs">₹</span>
-                                <input type="number" value="1000" min="0" class="advance-amount-input text-xs w-2/5 text-right border border-gray-300 rounded-md p-1 focus:ring-indigo-500" oninput="calculateTotals()">
-                                <button onclick="removeAdvanceEntry(this)" class="remove-advance-btn text-red-500 hover:text-red-700 p-0.5 no-print" title="Remove Entry">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
-                                </button>
-                            </div>
+                            <!-- Advance payment entries -->
                         </div>
                     </div>
                     
@@ -208,6 +199,8 @@
             </footer>
 
         </div>
+        <!-- INVOICE DOCUMENT END -->
+
     </div>
 
     <script>
@@ -223,13 +216,29 @@
         const discountInput = document.getElementById('discount-input');
         const subtotalDisplay = document.getElementById('subtotal-display');
         const totalBalanceDisplay = document.getElementById('total-balance-display');
+        
         const advancePaidList = document.getElementById('advance-paid-list');
         const addAdvanceBtn = document.getElementById('add-advance-btn');
         const totalAdvanceDisplay = document.getElementById('total-advance-display');
 
+        // --- Utility Functions ---
+
         function formatCurrency(amount) {
             return `₹${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
+
+        // Formats YYYY-MM-DD to DD/MM/YYYY
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function updateDisplayDate() {
+            invoiceDateDisplay.textContent = formatDate(invoiceDateInput.value);
+        }
+
+        // --- Advance Payment Logic ---
 
         function createAdvancePaymentEntry(amount = 0) {
             const entryDiv = document.createElement('div');
@@ -242,6 +251,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
                 </button>
             `;
+            entryDiv.querySelector('.advance-amount-input').addEventListener('input', calculateTotals);
             return entryDiv;
         }
 
@@ -251,6 +261,8 @@
         }
         window.removeAdvanceEntry = removeAdvanceEntry;
 
+        // --- Core Logic ---
+        
         function createItemRow() {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 border-b border-gray-200';
@@ -293,10 +305,11 @@
             
             const discount = parseFloat(discountInput.value) || 0;
             let totalBalance = subtotal - discount - totalAdvancePaid;
+            totalBalance = Math.max(0, totalBalance);
 
             subtotalDisplay.textContent = formatCurrency(subtotal);
             totalAdvanceDisplay.textContent = formatCurrency(totalAdvancePaid);
-            totalBalanceDisplay.textContent = formatCurrency(Math.max(0, totalBalance));
+            totalBalanceDisplay.textContent = formatCurrency(totalBalance);
         }
 
         function removeItem(button) {
@@ -307,98 +320,72 @@
         }
         window.removeItem = removeItem;
 
-        // Function to replace inputs with static spans for PDF
-        function prepareForPDF() {
-            const replacements = [];
-
-            // Replace Bill To Textarea
-            const billToVal = billToInput.value;
-            const billToSpan = document.createElement('div');
-            billToSpan.className = "whitespace-pre-wrap text-sm text-gray-700 min-h-[6rem]";
-            billToSpan.textContent = billToVal;
-            replacements.push({ el: billToInput, placeholder: billToSpan });
-
-            // Replace Status Select
-            const statusText = statusSelect.options[statusSelect.selectedIndex].text;
-            const statusColor = statusSelect.options[statusSelect.selectedIndex].className.split('-')[1] || 'gray';
-            const statusDiv = document.createElement('div');
-            statusDiv.className = `text-lg font-bold text-${statusColor}-600`;
-            statusDiv.textContent = `Status: ${statusText}`;
-            replacements.push({ el: statusSelect, placeholder: statusDiv });
-
-            // Replace all Table Inputs
-            itemTableBody.querySelectorAll('input').forEach(input => {
-                const span = document.createElement('span');
-                span.className = "text-sm text-gray-700 block w-full";
-                
-                if (input.type === 'number') {
-                    span.textContent = parseFloat(input.value || 0).toFixed(2);
-                    span.className += " text-right";
-                } else {
-                    span.textContent = input.value;
-                }
-                replacements.push({ el: input, placeholder: span });
-            });
-
-            // Replace Advance Entry Inputs
-            advancePaidList.querySelectorAll('.advance-entry').forEach(entry => {
-                const date = entry.querySelector('.advance-date-input').value;
-                const amount = entry.querySelector('.advance-amount-input').value;
-                const div = document.createElement('div');
-                div.className = "flex justify-between text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-0";
-                div.innerHTML = `<span>${date}</span><span>${formatCurrency(amount)}</span>`;
-                replacements.push({ el: entry, placeholder: div });
-            });
-
-            // Execute replacements
-            replacements.forEach(item => item.el.replaceWith(item.placeholder));
-            return replacements;
-        }
-
-        function restoreFromPDF(replacements) {
-            // Restore in reverse to avoid DOM nesting issues
-            replacements.reverse().forEach(item => item.placeholder.replaceWith(item.el));
-        }
-
-        async function generatePDF() {
+        function generatePDF() {
             const element = document.getElementById('invoice-content');
             const invoiceNumber = invoiceNumberInput.value.replace(/[^a-zA-Z0-9]/g, '_');
             const filename = `Invoice_${invoiceNumber}.pdf`;
 
-            // Prepare UI for static rendering
-            const replacements = prepareForPDF();
+            // Preparation: Swap inputs for static text to make PDF look clean
+            const replacements = [];
+            
+            // 1. Swap textareas
+            element.querySelectorAll('textarea').forEach(el => {
+                const span = document.createElement('div');
+                span.className = 'whitespace-pre-wrap text-sm text-gray-700';
+                span.textContent = el.value;
+                replacements.push({ original: el, placeholder: span });
+                el.replaceWith(span);
+            });
+
+            // 2. Swap Selects
+            element.querySelectorAll('select').forEach(el => {
+                const span = document.createElement('span');
+                span.className = el.options[el.selectedIndex].className + ' font-bold';
+                span.textContent = el.options[el.selectedIndex].text;
+                replacements.push({ original: el, placeholder: span });
+                el.replaceWith(span);
+            });
+
+            // 3. Swap Table Inputs (Dates & Amounts)
+            element.querySelectorAll('input').forEach(el => {
+                const span = document.createElement('span');
+                if (el.type === 'date') {
+                    span.textContent = formatDate(el.value);
+                } else if (el.type === 'number' && !el.classList.contains('advance-amount-input')) {
+                    span.textContent = el.value;
+                } else {
+                    span.textContent = el.value;
+                }
+                replacements.push({ original: el, placeholder: span });
+                el.replaceWith(span);
+            });
 
             const opt = {
                 margin: 0.5,
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: false, useCORS: true },
+                html2canvas: { scale: 2, logging: false },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            try {
-                await html2pdf().set(opt).from(element).save();
-            } finally {
-                // Restore interactive elements
-                restoreFromPDF(replacements);
-            }
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore all originals
+                replacements.forEach(item => {
+                    item.placeholder.replaceWith(item.original);
+                });
+            });
         }
 
         // --- Event Listeners and Initialization ---
 
-        // Initialize date
+        // Initialize today's date in control panel
         const today = new Date().toISOString().substring(0, 10);
         invoiceDateInput.value = today;
-        invoiceDateDisplay.textContent = today; // Sync on load
+        updateDisplayDate();
 
-        // Critical: Sync input to display area whenever user changes the date
-        invoiceDateInput.addEventListener('change', (e) => {
-            invoiceDateDisplay.textContent = e.target.value;
-        });
-
-        invoiceNumberInput.addEventListener('input', () => {
-            invoiceNumberDisplay.textContent = invoiceNumberInput.value;
-        });
+        // Control Panel Listeners
+        invoiceNumberInput.addEventListener('input', () => invoiceNumberDisplay.textContent = invoiceNumberInput.value);
+        invoiceDateInput.addEventListener('change', updateDisplayDate);
 
         addItemBtn.addEventListener('click', () => {
             itemTableBody.appendChild(createItemRow());
@@ -412,7 +399,12 @@
 
         downloadPdfBtn.addEventListener('click', generatePDF);
 
-        document.addEventListener('DOMContentLoaded', calculateTotals);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add one default advance row
+            advancePaidList.appendChild(createAdvancePaymentEntry(1000));
+            calculateTotals();
+        });
+
     </script>
 </body>
 </html>
