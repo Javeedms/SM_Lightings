@@ -7,38 +7,43 @@
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for professional appearance and PDF targeting */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
 
-        /* Styles specifically for the PDF content container */
         .invoice-document {
             background-color: white;
             padding: 2rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        /* Hide buttons and interactive elements when printing/generating PDF */
         @media print {
             .no-print {
                 display: none !important;
             }
         }
 
-        /* Ensure table border collapse for a cleaner look */
         .invoice-table th, .invoice-table td {
             border: 1px solid #e5e7eb;
         }
-        /* Custom styling for the multiple advance paid entries */
+        
         .advance-entry {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 0.5rem;
             margin-bottom: 0.25rem;
+        }
+
+        /* Helper to hide inputs but show their values during PDF generation */
+        .pdf-text-only {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            appearance: none;
+            -webkit-appearance: none;
         }
     </style>
     <!-- Load html2pdf.js for PDF generation -->
@@ -57,7 +62,7 @@
                 </div>
                 <div class="flex-1 min-w-[200px]">
                     <label for="invoice-date-input" class="block text-sm font-medium text-gray-700">Date</label>
-                    <input type="date" id="invoice-date-input" value="2025-11-23" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                    <input type="date" id="invoice-date-input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
                 </div>
                 <button id="add-item-btn" class="flex items-center justify-center px-4 py-2 mt-5 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-150">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -81,14 +86,13 @@
             <header class="flex flex-col sm:flex-row justify-between items-start mb-8 pb-4 border-b border-gray-200">
                 <div>
                     <h1 class="text-3xl font-extrabold text-indigo-800">SAMINOOR LIGHTINGS</h1>
-                    <!-- Text size reduced to text-xs -->
-                    <p class="text-xs text-gray-600 mt-1">Near minar masjid Alampurpeth, Ilkal</p>
-                    <p class="text-xs text-gray-600">Phone: +91 9740778757, +91 8453304064</p>
+                    <p class="text-sm text-gray-600 mt-1">Near minar masjid Alampurpeth, Ilkal</p>
+                    <p class="text-sm text-gray-600">Phone: +91 9740778757, +91 8453304064</p>
                 </div>
                 <div class="mt-4 sm:mt-0 bg-indigo-50 px-4 py-2 rounded-lg text-right">
                     <h2 class="text-xl font-bold text-indigo-700">INVOICE</h2>
                     <p class="text-sm text-gray-600">
-                        <span class="font-semibold">Date:</span> <span id="invoice-date-display">2025-11-23</span>
+                        <span class="font-semibold">Date:</span> <span id="invoice-date-display"></span>
                     </p>
                     <p class="text-sm text-gray-600">
                         <span class="font-semibold">Invoice #:</span> <span id="invoice-number-display">SML00013</span>
@@ -100,10 +104,7 @@
             <div class="flex justify-between mb-8">
                 <div class="w-1/2 pr-4">
                     <p class="font-semibold text-gray-700 mb-1">Bill To:</p>
-                    <!-- Textarea height and padding reduced, text size set to text-sm -->
-                    <textarea id="bill-to-input" class="w-full h-16 p-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Customer Name, Address, Contact details...">Mr. John Doe
-123 Main Street
-Anytown, 587125</textarea>
+                    <textarea id="bill-to-input" class="w-full h-24 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="Customer Name, Address, Contact details...">Mr. John Doe&#10;123 Main Street&#10;Anytown, 587125</textarea>
                 </div>
                 <div class="w-1/2 pl-4 text-right">
                     <p class="font-semibold text-gray-700 mb-1">Status:</p>
@@ -128,9 +129,7 @@ Anytown, 587125</textarea>
                             <th class="py-2 px-3 text-center w-[5%] no-print"></th>
                         </tr>
                     </thead>
-                    <!-- Text size reduced to text-xs -->
-                    <tbody id="item-table-body" class="text-gray-700 text-xs font-normal">
-                        <!-- Default item row - Initial values set to demonstrate the new sum logic: 10000 + 1200 = 11200 -->
+                    <tbody id="item-table-body" class="text-gray-700 text-sm font-light">
                         <tr class="hover:bg-gray-50 border-b border-gray-200">
                             <td class="py-2 px-3">
                                 <input type="date" value="2025-11-20" class="date-input w-full p-1 border-none focus:ring-0">
@@ -138,30 +137,28 @@ Anytown, 587125</textarea>
                             <td class="py-2 px-3">
                                 <input type="text" value="LED Light Setup for Stage" class="item-input w-full p-1 border-none focus:ring-0">
                             </td>
-                            <!-- Days no longer contributes to line amount but still triggers total calculation -->
                             <td class="py-2 px-3 text-right">
                                 <input type="number" value="3" min="1" class="days-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                             </td>
                             <td class="py-2 px-3 text-right">
-                                <!-- Vehicle Rent input now contributes to Subtotal -->
                                 <input type="number" value="1200" min="0" class="rent-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                             </td>
-                            <!-- Amount is the Base Item Cost input and contributes to Subtotal -->
                             <td class="py-2 px-3 text-right font-medium">
                                 <input type="number" value="10000.00" min="0" class="amount-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                             </td>
                             <td class="py-2 px-3 text-center no-print">
-                                <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg></button>
+                                <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
+                                </button>
                             </td>
                         </tr>
-                        <!-- Additional items will be added here -->
                     </tbody>
                 </table>
             </div>
 
             <!-- Totals and Summary -->
             <div class="flex justify-end">
-                <div class="w-full sm:w-1/2 lg:w-1/3 space-y-2 text-sm"> <!-- Totals section font reduced to text-sm -->
+                <div class="w-full sm:w-1/2 lg:w-1/3 space-y-2">
                     <div class="flex justify-between border-t pt-2">
                         <span class="text-gray-700 font-medium">Subtotal:</span>
                         <span id="subtotal-display" class="font-bold text-gray-800">₹0.00</span>
@@ -171,7 +168,6 @@ Anytown, 587125</textarea>
                         <input type="number" id="discount-input" value="0" min="0" class="w-24 text-right border border-gray-300 rounded-md p-1 focus:outline-none focus:ring-1 focus:ring-indigo-500" oninput="calculateTotals()">
                     </div>
                     
-                    <!-- ADVANCE PAID SECTION: Updated to support multiple dated entries -->
                     <div class="pt-2 border-t border-gray-200">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-gray-700 font-medium">Advance Paid Entries:</span>
@@ -183,7 +179,6 @@ Anytown, 587125</textarea>
                         </div>
                         
                         <div id="advance-paid-list" class="space-y-1">
-                            <!-- Advance payment entries will be inserted here -->
                             <div class="advance-entry">
                                 <input type="date" value="2025-11-23" class="advance-date-input text-xs w-2/5 p-1 border border-gray-300 rounded-md focus:ring-indigo-500">
                                 <span class="text-xs">₹</span>
@@ -213,8 +208,6 @@ Anytown, 587125</textarea>
             </footer>
 
         </div>
-        <!-- INVOICE DOCUMENT END -->
-
     </div>
 
     <script>
@@ -230,21 +223,13 @@ Anytown, 587125</textarea>
         const discountInput = document.getElementById('discount-input');
         const subtotalDisplay = document.getElementById('subtotal-display');
         const totalBalanceDisplay = document.getElementById('total-balance-display');
-        
-        // New elements for advance payments
         const advancePaidList = document.getElementById('advance-paid-list');
         const addAdvanceBtn = document.getElementById('add-advance-btn');
         const totalAdvanceDisplay = document.getElementById('total-advance-display');
 
-
-        // --- Utility Functions ---
-
-        // Formats a number to two decimal places with the Indian Rupee symbol
         function formatCurrency(amount) {
-            return `₹${parseFloat(amount).toFixed(2)}`;
+            return `₹${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
-
-        // --- Advance Payment Logic ---
 
         function createAdvancePaymentEntry(amount = 0) {
             const entryDiv = document.createElement('div');
@@ -257,8 +242,6 @@ Anytown, 587125</textarea>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg>
                 </button>
             `;
-            // Attach input listener to the new row
-            entryDiv.querySelector('.advance-amount-input').addEventListener('input', calculateTotals);
             return entryDiv;
         }
 
@@ -266,11 +249,8 @@ Anytown, 587125</textarea>
             button.closest('.advance-entry').remove();
             calculateTotals();
         }
-        window.removeAdvanceEntry = removeAdvanceEntry; // Expose to global scope for inline onclick
+        window.removeAdvanceEntry = removeAdvanceEntry;
 
-        // --- Core Logic ---
-        
-        // Function to create a new, empty item row
         function createItemRow() {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 border-b border-gray-200';
@@ -281,207 +261,158 @@ Anytown, 587125</textarea>
                 <td class="py-2 px-3">
                     <input type="text" placeholder="Item/Service description" class="item-input w-full p-1 border-none focus:ring-0">
                 </td>
-                <!-- Days still triggers total calculation -->
                 <td class="py-2 px-3 text-right">
                     <input type="number" value="1" min="1" class="days-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                 </td>
-                <!-- Rent triggers total calculation -->
                 <td class="py-2 px-3 text-right">
                     <input type="number" value="0" min="0" class="rent-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                 </td>
-                <!-- Amount (Base Cost) triggers total calculation -->
                 <td class="py-2 px-3 text-right font-medium">
-                    <input type="number" value="100.00" min="0" class="amount-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
+                    <input type="number" value="0.00" min="0" class="amount-input w-full text-right p-1 border-none focus:ring-0" oninput="calculateTotals()">
                 </td>
                 <td class="py-2 px-3 text-center no-print">
                     <button onclick="removeItem(this)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd" /></svg></button>
                 </td>
             `;
-            // Attach input change listeners
-            row.querySelector('.days-input').addEventListener('input', calculateTotals);
-            row.querySelector('.rent-input').addEventListener('input', calculateTotals);
-            row.querySelector('.amount-input').addEventListener('input', calculateTotals);
-            
             return row;
         }
 
-        // Function to calculate the totals (Subtotal, Discount, Balance)
         function calculateTotals() {
             let subtotal = 0;
             let totalAdvancePaid = 0;
 
-            // 1. Calculate Subtotal from all line items: Sum of Amount (Base Cost) and Vehicle Rent
             itemTableBody.querySelectorAll('tr').forEach(row => {
-                const amountInput = row.querySelector('.amount-input');
-                const rentInput = row.querySelector('.rent-input'); 
-
-                // Read the base amount and the rent
-                const baseAmount = parseFloat(amountInput.value) || 0;
-                const vehicleRent = parseFloat(rentInput.value) || 0; 
-                
-                // Line Total Contribution = Base Amount + Vehicle Rent (NEW LOGIC)
-                const lineTotal = baseAmount + vehicleRent; 
-                
-                subtotal += lineTotal;
+                const amount = parseFloat(row.querySelector('.amount-input').value) || 0;
+                const rent = parseFloat(row.querySelector('.rent-input').value) || 0; 
+                subtotal += (amount + rent);
             });
             
-            // 2. Calculate Total Advance Paid
             advancePaidList.querySelectorAll('.advance-amount-input').forEach(input => {
-                const amount = parseFloat(input.value) || 0;
-                totalAdvancePaid += amount;
+                totalAdvancePaid += (parseFloat(input.value) || 0);
             });
             
-            // 3. Apply discount and advance paid
             const discount = parseFloat(discountInput.value) || 0;
-
-            // 4. Calculate final balance
             let totalBalance = subtotal - discount - totalAdvancePaid;
-            totalBalance = Math.max(0, totalBalance); // Ensure balance isn't negative
 
-            // 5. Update the display elements
             subtotalDisplay.textContent = formatCurrency(subtotal);
             totalAdvanceDisplay.textContent = formatCurrency(totalAdvancePaid);
-            totalBalanceDisplay.textContent = formatCurrency(totalBalance);
+            totalBalanceDisplay.textContent = formatCurrency(Math.max(0, totalBalance));
         }
 
-        // Function to remove an item row
         function removeItem(button) {
             if (itemTableBody.children.length > 1) {
                 button.closest('tr').remove();
                 calculateTotals();
-            } else {
-                console.log("Cannot remove the last item row.");
             }
         }
-        window.removeItem = removeItem; // Expose to global scope for inline onclick
+        window.removeItem = removeItem;
 
-        // Function to handle PDF generation
-        function generatePDF() {
+        // Function to replace inputs with static spans for PDF
+        function prepareForPDF() {
+            const replacements = [];
+
+            // Replace Bill To Textarea
+            const billToVal = billToInput.value;
+            const billToSpan = document.createElement('div');
+            billToSpan.className = "whitespace-pre-wrap text-sm text-gray-700 min-h-[6rem]";
+            billToSpan.textContent = billToVal;
+            replacements.push({ el: billToInput, placeholder: billToSpan });
+
+            // Replace Status Select
+            const statusText = statusSelect.options[statusSelect.selectedIndex].text;
+            const statusColor = statusSelect.options[statusSelect.selectedIndex].className.split('-')[1] || 'gray';
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `text-lg font-bold text-${statusColor}-600`;
+            statusDiv.textContent = `Status: ${statusText}`;
+            replacements.push({ el: statusSelect, placeholder: statusDiv });
+
+            // Replace all Table Inputs
+            itemTableBody.querySelectorAll('input').forEach(input => {
+                const span = document.createElement('span');
+                span.className = "text-sm text-gray-700 block w-full";
+                
+                if (input.type === 'number') {
+                    span.textContent = parseFloat(input.value || 0).toFixed(2);
+                    span.className += " text-right";
+                } else {
+                    span.textContent = input.value;
+                }
+                replacements.push({ el: input, placeholder: span });
+            });
+
+            // Replace Advance Entry Inputs
+            advancePaidList.querySelectorAll('.advance-entry').forEach(entry => {
+                const date = entry.querySelector('.advance-date-input').value;
+                const amount = entry.querySelector('.advance-amount-input').value;
+                const div = document.createElement('div');
+                div.className = "flex justify-between text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-0";
+                div.innerHTML = `<span>${date}</span><span>${formatCurrency(amount)}</span>`;
+                replacements.push({ el: entry, placeholder: div });
+            });
+
+            // Execute replacements
+            replacements.forEach(item => item.el.replaceWith(item.placeholder));
+            return replacements;
+        }
+
+        function restoreFromPDF(replacements) {
+            // Restore in reverse to avoid DOM nesting issues
+            replacements.reverse().forEach(item => item.placeholder.replaceWith(item.el));
+        }
+
+        async function generatePDF() {
             const element = document.getElementById('invoice-content');
-            const invoiceNumber = invoiceNumberInput.value.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitize filename
+            const invoiceNumber = invoiceNumberInput.value.replace(/[^a-zA-Z0-9]/g, '_');
             const filename = `Invoice_${invoiceNumber}.pdf`;
+
+            // Prepare UI for static rendering
+            const replacements = prepareForPDF();
 
             const opt = {
                 margin: 0.5,
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: false },
+                html2canvas: { scale: 2, logging: false, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
-            
-            // --- 1. Replace Bill To Textarea with Static Div ---
-            const billToTextarea = document.getElementById('bill-to-input');
-            const billToDiv = document.createElement('div');
-            // Use whitespace-pre-wrap to preserve line breaks/formatting
-            billToDiv.className = 'whitespace-pre-wrap text-sm h-16 p-1 border border-gray-300 rounded-md'; 
-            billToDiv.textContent = billToTextarea.value;
-            billToTextarea.replaceWith(billToDiv);
 
-            // --- 2. Temporarily replace the interactive status select with static text ---
-            const statusText = statusSelect.options[statusSelect.selectedIndex].text;
-            const statusColor = statusSelect.options[statusSelect.selectedIndex].className.split('-')[1]; 
-            const statusDiv = document.createElement('div');
-            statusDiv.className = `text-lg font-bold text-${statusColor}-600`;
-            statusDiv.textContent = `Status: ${statusText}`;
-            statusSelect.replaceWith(statusDiv); 
-            
-            // --- 3. Temporarily replace item inputs with static text for cleaner PDF ---
-            const itemInputsToReplace = []; // Array to hold originals and placeholders
-            
-            itemTableBody.querySelectorAll('tr').forEach(row => {
-                const amountInput = row.querySelector('.amount-input');
-                const dateInput = row.querySelector('.date-input');
-                const itemInput = row.querySelector('.item-input');
-                
-                // Amount Input (already in previous version, keeping for context)
-                const amountSpan = document.createElement('span');
-                amountSpan.textContent = formatCurrency(parseFloat(amountInput.value) || 0).replace('₹', ''); 
-                itemInputsToReplace.push({ original: amountInput, placeholder: amountSpan, parent: amountInput.parentNode });
-                amountInput.replaceWith(amountSpan);
-                
-                // Date Input (NEW)
-                const dateSpan = document.createElement('span');
-                dateSpan.textContent = dateInput.value;
-                itemInputsToReplace.push({ original: dateInput, placeholder: dateSpan, parent: dateInput.parentNode });
-                dateInput.replaceWith(dateSpan);
-                
-                // Item Description Input (NEW)
-                const itemSpan = document.createElement('span');
-                itemSpan.textContent = itemInput.value;
-                itemInputsToReplace.push({ original: itemInput, placeholder: itemSpan, parent: itemInput.parentNode });
-                itemInput.replaceWith(itemSpan);
-            });
-            
-            // --- 4. Temporarily replace advance input fields with static text for cleaner PDF ---
-            const advanceEntries = Array.from(advancePaidList.querySelectorAll('.advance-entry'));
-            const advancePlaceholders = [];
-
-            advanceEntries.forEach(entry => {
-                const date = entry.querySelector('.advance-date-input').value;
-                const amount = entry.querySelector('.advance-amount-input').value;
-                
-                const placeholder = document.createElement('div');
-                placeholder.className = 'flex justify-between text-xs text-gray-700'; // text-xs for smaller size
-                placeholder.textContent = `${date}: ${formatCurrency(amount)}`;
-                
-                advancePlaceholders.push({ original: entry, placeholder: placeholder });
-                
-                // Replace the original, complex entry div with the simple placeholder
-                const clonedEntry = entry.cloneNode(true); 
-                entry.parentNode.replaceChild(clonedEntry, entry);
-                clonedEntry.replaceWith(placeholder);
-            });
-            
-
-            // Start PDF generation
-            html2pdf().set(opt).from(element).save().then(() => {
-                // --- 5. Restore Bill To Textarea ---
-                billToDiv.replaceWith(billToTextarea);
-                
-                // --- 6. Restore the original dropdown element ---
-                statusDiv.replaceWith(statusSelect);
-                
-                // --- 7. Restore the original interactive item inputs ---
-                itemInputsToReplace.forEach(item => {
-                    item.parent.appendChild(item.original);
-                    item.placeholder.replaceWith(item.original);
-                });
-                
-                // --- 8. Restore the original interactive advance entries (need to rebuild the list) ---
-                advancePaidList.innerHTML = ''; // Clear the list
-                advancePlaceholders.forEach(item => {
-                    advancePaidList.appendChild(item.original);
-                });
-            });
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } finally {
+                // Restore interactive elements
+                restoreFromPDF(replacements);
+            }
         }
 
         // --- Event Listeners and Initialization ---
 
-        // Initialize today's date
-        invoiceDateInput.value = new Date().toISOString().substring(0, 10);
+        // Initialize date
+        const today = new Date().toISOString().substring(0, 10);
+        invoiceDateInput.value = today;
+        invoiceDateDisplay.textContent = today; // Sync on load
 
-        // Link control inputs to display areas
-        invoiceNumberInput.addEventListener('input', () => invoiceNumberDisplay.textContent = invoiceNumberInput.value);
-        invoiceDateInput.addEventListener('change', () => invoiceDateDisplay.textContent = invoiceDateInput.value);
-
-        // Add item button handler
-        addItemBtn.addEventListener('click', () => {
-            itemTableBody.appendChild(createItemRow());
-            calculateTotals(); // Must calculate totals to include the new row's default amount
+        // Critical: Sync input to display area whenever user changes the date
+        invoiceDateInput.addEventListener('change', (e) => {
+            invoiceDateDisplay.textContent = e.target.value;
         });
 
-        // Add advance payment button handler
+        invoiceNumberInput.addEventListener('input', () => {
+            invoiceNumberDisplay.textContent = invoiceNumberInput.value;
+        });
+
+        addItemBtn.addEventListener('click', () => {
+            itemTableBody.appendChild(createItemRow());
+            calculateTotals();
+        });
+
         addAdvanceBtn.addEventListener('click', () => {
             advancePaidList.appendChild(createAdvancePaymentEntry());
             calculateTotals();
         });
 
-        // PDF Download handler
         downloadPdfBtn.addEventListener('click', generatePDF);
 
-        // Calculate initial totals on load
         document.addEventListener('DOMContentLoaded', calculateTotals);
-
     </script>
 </body>
 </html>
